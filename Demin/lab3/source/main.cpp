@@ -5,26 +5,37 @@
 #include <fstream>
 
 using namespace std;
-
+template<typename T>
+class binaryTree;
 //класс узла дерева
 template<typename T>
 class treeNode {
+public:
     ~treeNode() {
-        delete left;
-        delete right;
     }
 
-public:
+    treeNode() {
+        nullBool = true;
+        leftIndex = -1;
+        rightIndex = -1;
+    }
+
+    bool nullBool;
     T root;//корень
-    treeNode *left;//левая ветвь
-    treeNode *right;//правая ветвь
+    int leftIndex;//левая ветвь
+    int rightIndex;//правая ветвь
 };
 
 //класс для вывода промежуточных значений в файл
 class logger {
     string str;
     std::FILE *file;
+    treeNode<char>* BT;
+
 public:
+    char root(int bt) {
+        return (BT + bt)->root;
+    }
     //конструктор класса длв вывода промежуточных значений
     logger() : file(std::fopen("intermeiate.txt", "w+")) {
         if (!file)
@@ -37,27 +48,32 @@ public:
         if (std::fclose(file) != 0) {
         }
     };
+    bool isNull(int bt) {
+        if(bt<0){
+            return true;
+        }
+        return (BT + bt)->nullBool;
+    }
 
     //рекурсивная функция для вывода промежуточных деревьев
-    void logTree(treeNode<char> *tree, int level) {
-        if (tree) {
-            logTree(tree->left, level + 1);
+    void logTree(int tree, int level) {
+        if (!isNull(tree)) {
+            logTree(BT[tree].leftIndex, level + 1);
             for (int i = 0; i < level; i++) fputs("   ", file);
-            if (!tree->left && !tree->right) {
-                str = "(" + std::string(1, tree->root) + ")\n";
+            if (isNull(BT[tree].leftIndex) && isNull(BT[tree].rightIndex)) {
+                str = "(" + std::string(1, BT[tree].root) + ")\n";
                 fputs(str.c_str(), file);
             } else {
-                str = string(1, tree->root) + "\n";
+                str = string(1,  BT[tree].root) + "\n";
                 fputs(str.c_str(), file);
             }
-            logTree(tree->right, level + 1);
-
+            logTree(BT[tree].rightIndex, level + 1);
         }
     }
 
     //вызов рекурсивной функции
-    void logWriteTree(treeNode<char> *tree, int level) {
-        if (tree) {
+    void logWriteTree(int tree, int level) {
+        if (!isNull(tree)) {
             fputs("---------------------------------------------\n", file);
             logTree(tree, level);
         }
@@ -68,139 +84,144 @@ public:
         fputs("StartEnter\n", file);
         fputs("Leaves in brackets\n", file);
     }
+    void setBT(treeNode<char>* bt){
+        BT=bt;
+    }
 };
 
 static logger *log = new logger();
-
 template<typename T>
 class binaryTree {
-
     ~binaryTree() {
         delete BT;
     }
 
     //проверка пустое ли дерево
-    bool isNull(treeNode<T> *bt) {
-        return bt == nullptr;
+    bool isNull(int bt) {
+        if(bt<0){
+            return true;
+        }
+        return (BT + bt)->nullBool;
     }
 
     //получение корня узла дерева
-    T root(treeNode<T> *bt) {
-        return bt->root;
+    T root(int bt) {
+        return (BT + bt)->root;
     }
 
     //создание узла дерева
-    treeNode<T> *cons(T elem, treeNode<T> *left, treeNode<T> *right) {
-        treeNode<T> *a = new treeNode<T>;
+    int cons(T elem, int left, int right) {
+        treeNode<T> *a = &BT[countTree];
+        countTree++;
         a->root = elem;
-        a->left = left;
-        a->right = right;
-        return a;
+        a->leftIndex = left;
+        a->rightIndex = right;
+        a->nullBool = false;
+        return countTree - 1;
     }
 
     //рекурсивная функции вывода элементов дерева
-    void writeNode(treeNode<T> *bt, ofstream &file) {
+    void writeNode(int bt, ofstream &file) {
         if (file.is_open()) {
             if (!isNull(bt)) {
                 file << root(bt) << " ";
-                writeNode(bt->left, file);
-                writeNode(bt->right, file);
+                writeNode(BT[bt].leftIndex, file);
+                writeNode(BT[bt].rightIndex, file);
             }
         } else {
             if (!isNull(bt)) {
                 cout << root(bt) << " ";
-                writeNode(bt->left, file);
-                writeNode(bt->right, file);
+                writeNode(BT[bt].leftIndex, file);
+                writeNode(BT[bt].rightIndex, file);
             }
         }
     }
 
     //рекурсивная функция вывод листьев дерева
-    void writeLeaflet(treeNode<T> *bt, ofstream &file) {
+    void writeLeaflet(int bt, ofstream &file) {
         if (file.is_open()) {
             if (!isNull(bt)) {
-                if (!bt->left && !bt->right) {
+                if (!isNull(BT[bt].leftIndex) && !isNull(BT[bt].leftIndex)) {
                     file << root(bt) << " ";
                 }
-                writeLeaflet(bt->left, file);
-                writeLeaflet(bt->right, file);
+                writeLeaflet(BT[bt].leftIndex, file);
+                writeLeaflet(BT[bt].rightIndex, file);
             }
         } else {
             if (!isNull(bt)) {
-                if (!bt->left && !bt->right) {
+                if (!isNull(BT[bt].leftIndex) && !isNull(BT[bt].leftIndex)) {
                     cout << root(bt) << " ";
                 }
-                writeLeaflet(bt->left, file);
-                writeLeaflet(bt->right, file);
+                writeLeaflet(BT[bt].leftIndex, file);
+                writeLeaflet(BT[bt].rightIndex, file);
             }
         }
 
     }
 
     //рекурсивная функция вывода узлов с уровнем
-    void writeLevel(treeNode<T> *bt, int level, int n, int *count) {
+    void writeLevel(int bt, int level, int n, int *count) {
         if (!isNull(bt)) {
             if (n == level) {
                 (*count)++;
                 return;
             }
-            writeLevel(bt->left, level + 1, n, count);
-            writeLevel(bt->right, level + 1, n, count);
+            writeLevel(BT[bt].leftIndex, level + 1, n, count);
+            writeLevel((BT[bt].rightIndex), level + 1, n, count);
         }
     }
 
 public:
     treeNode<T> *BT;
+    int countTree;
+    int mem;
+    int rootTree;
 
     //создание пустого дерева
-    binaryTree() {
-        this->BT = nullptr;
+    binaryTree() : countTree(0), mem(0), rootTree(0) {
+        this->BT = new treeNode<T>[100];
+        this->mem = 100;
+        log->setBT(BT);
     }
 
-    //создание дерева с первым корнем
-    explicit binaryTree(T a) {
-        this->BT = new treeNode<T>;
-        this->BT->root = a;
-        this->BT->left = nullptr;
-        this->BT->right = nullptr;
-    };
+
 
     //вызов рекурсивной функции для вывода элементов дерева
     void writeTree(ofstream &file) {
-        writeNode(this->BT, file);
+        writeNode(this->rootTree, file);
     }
 
     //вызов рекурсивной функции для вывода листьев дерева
     void writeLeaves(ofstream &file) {
-        writeLeaflet(this->BT, file);
+        writeLeaflet(this->rootTree, file);
     }
 
 
 //рекурсивная функция ввода дерева из консоли
-    treeNode<T> *enterTree() {
-        log->logWriteTree(BT, 1);
+    int enterTree() {
+//        log->logWriteTree(BT, 1);
         char ch;
-        treeNode<T> *l;
-        treeNode<T> *r;
+        int l;
+        int r;
         cin >> ch;
 
-        if (ch == '/') return NULL;
+        if (ch == '/') return -1;
         else {
             l = enterTree();
             log->logWriteTree(l, 0);
             r = enterTree();
-            log->logWriteTree(r, 0);
+             log->logWriteTree(r, 0);
             return cons(ch, l, r);
         }
     }
 
 //рекурсивная функция ввода дерева из файла
-    treeNode<T> *enterTreeFromFile(ifstream *file) {
+    int enterTreeFromFile(ifstream *file) {
         char ch;
-        treeNode<T> *l;
-        treeNode<T> *r;
+        int l;
+        int r;
         *file >> ch;
-        if (ch == '/') return NULL;
+        if (ch == '/') return -1;
         else {
             l = enterTreeFromFile(file);
             log->logWriteTree(l, 0);
@@ -214,12 +235,12 @@ public:
     void writeWithLevel(ofstream &file, int n) {
         if (file.is_open()) {
             int count = 0;
-            writeLevel(BT, 1, n, &count);
+            writeLevel(this->rootTree, 1, n, &count);
             file << count;
 
         } else {
             int count = 0;
-            writeLevel(BT, 1, n, &count);
+            writeLevel(this->rootTree, 1, n, &count);
             cout << count;
         }
 
@@ -242,14 +263,14 @@ void enter(binaryTree<char> *a) {
             cin >> name;
             file.open(name);
             if (file.is_open()) {
-                a->BT = a->enterTreeFromFile(&file);
-                log->logWriteTree(a->BT, 0);
+                a->rootTree = a->enterTreeFromFile(&file);
+                 log->logWriteTree(a->rootTree, 0);
                 file.close();
             } else cout << "Unable to open file";
             break;
         case 1:
-            a->BT = a->enterTree();
-            log->logWriteTree(a->BT, 0);
+            a->rootTree = a->enterTree();
+             log->logWriteTree(a->rootTree, 0);
             break;
         default:
             cout << "incorrect type\n";
