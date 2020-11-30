@@ -526,14 +526,26 @@ void print(int *array, int count) {
 }
 
 int main() {
+    int mode = 1;
+    while (mode) {
+        int *array = new int[NMax];//Рассматриваемый массив
+        int count = 0;//Количество элементов в массиве
+        enter(array, &count);//Ввод массива
 
-    int *array = new int[NMax];//Рассматриваемый массив
-    int count = 0;//Количество элементов в массиве
+        timsort(array, count);//Сортировка
 
-    enter(array, &count);//Ввод массива
-
-
-    timsort(array, count);//Сортировка
-
-    print(array, count);//Вывод массива
+        print(array, count);//Вывод массива
+        std::cout << "\nIf you want to close the program, enter 0" << endl;
+        std::cout << "If you want to continue the program, enter 1" << endl;
+        cin >> mode;
+        while (mode!=0&&mode!=1) {
+            if(mode!=0&&mode!=1){
+                std::cout<<"wrong: try again!"<<endl;
+            }
+            std::cout << "\nIf you want to close the program, enter 0" << endl;
+            std::cout << "If you want to continue the program, enter 1" << endl;
+            cin >> mode;
+        }
+        delete[] array;
+    }
 }
