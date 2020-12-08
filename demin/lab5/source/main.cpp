@@ -253,8 +253,8 @@ int write(string text, vector<pair<char, std::string>> code) {
                         }
                     }
                 }
-                file << "\nThe size of the text in bytes before encoding:" << size << "\n";
-                file << "The size of the text in bytes after encoding:" << sizeHuffman << "\n";
+                file << "\nThe size of the text in bit before encoding:" << size << "\n";
+                file << "The size of the text in bit after encoding:" << sizeHuffman << "\n";
             } else {
                 cout << "file don't open\n";
             }
